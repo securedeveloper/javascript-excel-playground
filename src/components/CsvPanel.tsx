@@ -50,7 +50,13 @@ function typeOf(v: CellValue | undefined): string {
 }
 
 function show(v: CellValue | undefined): string {
-  if (v instanceof Date) return v.toISOString();
+  if (v instanceof Date) {
+    // Local wall-clock time, as the CSV wrote it (zone-less ISO dates are read as local).
+    const p = (n: number): string => String(n).padStart(2, "0");
+    const date = `${v.getFullYear()}-${p(v.getMonth() + 1)}-${p(v.getDate())}`;
+    const time = v.getHours() || v.getMinutes() || v.getSeconds() ? ` ${p(v.getHours())}:${p(v.getMinutes())}:${p(v.getSeconds())}` : "";
+    return date + time;
+  }
   if (v && typeof v === "object") return "error" in v ? v.error : v.richText.map((r) => r.text).join("");
   return v === undefined ? "" : String(v);
 }
