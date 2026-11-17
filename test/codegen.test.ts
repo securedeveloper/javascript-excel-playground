@@ -51,7 +51,7 @@ describe("code generator", () => {
   });
 
   it("pins the exact version in every install command", () => {
-    expect(installCommand("npm", "2.0.0-beta.0")).toBe("npm install javascript-excel@2.0.0-beta.0");
+    expect(installCommand("npm", "2.0.0-beta.1")).toBe("npm install javascript-excel@2.0.0-beta.1");
     expect(installCommand("pnpm", "1.2.3")).toBe("pnpm add javascript-excel@1.2.3");
     expect(installCommand("yarn", "1.2.3")).toBe("yarn add javascript-excel@1.2.3");
     expect(installCommand("bun", "1.2.3")).toBe("bun add javascript-excel@1.2.3");
