@@ -42,6 +42,10 @@ export interface WriteSettings {
   /** RRGGBB, or "" for no header fill. */
   headerFill: string;
   banded: boolean;
+  /** fromDatasets: where blocks after the first go, when the JSON is an array of datasets. */
+  placement: "below" | "right";
+  /** fromDatasets: empty rows or columns between blocks. */
+  gap: number;
   compression: "deflate" | "store";
 }
 
@@ -71,6 +75,8 @@ export const DEFAULT_WRITE: WriteSettings = {
   totals: true,
   headerFill: "DDEBF7",
   banded: false,
+  placement: "below",
+  gap: 1,
   compression: "deflate",
 };
 
@@ -192,6 +198,8 @@ export function decodeSettings(query: string, defaults: Settings): Settings {
       totals: bool(w.totals, D.write.totals),
       headerFill: fill,
       banded: bool(w.banded, D.write.banded),
+      placement: pick(w.placement, ["below", "right"] as const, D.write.placement),
+      gap: typeof w.gap === "number" && Number.isInteger(w.gap) && w.gap >= 0 && w.gap <= 20 ? w.gap : D.write.gap,
       compression: pick(w.compression, ["deflate", "store"] as const, D.write.compression),
     },
     dataset: str(raw.dataset, D.dataset),

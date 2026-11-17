@@ -91,3 +91,20 @@ describe("display format", () => {
     expect(wb.sheets[0]!.rows[1]![0]).toBeInstanceOf(Date);
   });
 });
+
+describe("fromDatasets blocks", () => {
+  it("puts blocks after the first below or to the right", async () => {
+    const { SAMPLE_BLOCKS_JSON } = await import("../src/lib/samples");
+    const below = buildSheet(SAMPLE_BLOCKS_JSON, { ...S.write, placement: "below", gap: 1 }).result;
+    const right = buildSheet(SAMPLE_BLOCKS_JSON, { ...S.write, placement: "right", gap: 1 }).result;
+    expect(below.blocks).toBe(2);
+    expect(right.blocks).toBe(2);
+    // Side by side: the second block's header sits on the first block's top row, one gap column after its last column.
+    const top = right.sheet.rows[0]!.map((c) => cellText(c));
+    expect(top).toContain("Status");
+    expect(top.indexOf("Status")).toBe(top.indexOf("Active") + 2);
+    // Below: it starts under the first block, so it adds rows instead of columns.
+    expect(below.sheet.rows.length).toBeGreaterThan(right.sheet.rows.length);
+    expect(below.sheet.rows[0]!.map((c) => cellText(c))).not.toContain("Status");
+  });
+});

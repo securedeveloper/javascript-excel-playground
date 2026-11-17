@@ -151,3 +151,20 @@ export const SAMPLE_DATASET = {
 };
 
 export const SAMPLE_DATASET_JSON = JSON.stringify(SAMPLE_DATASET, null, 2);
+
+/** Two blocks for fromDatasets: the sample dataset and a small summary next to it. */
+export const SAMPLE_BLOCKS = [
+  SAMPLE_DATASET,
+  {
+    columns: [
+      { title: "Status", key: "status" },
+      { title: "People", key: "people", total: "sum" },
+    ],
+    data: [
+      { status: "Active", people: 2 },
+      { status: "Inactive", people: 1 },
+    ],
+  },
+];
+
+export const SAMPLE_BLOCKS_JSON = JSON.stringify(SAMPLE_BLOCKS, null, 2);

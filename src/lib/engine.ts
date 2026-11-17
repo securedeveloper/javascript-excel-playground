@@ -1,5 +1,5 @@
 // Calls into javascript-excel, on the main thread or in a Web Worker, timed.
-import { fromDataset, isExcelError, toUint8Array, type CellInput, type Dataset, type DatasetOptions, type ExcelWarning, type Progress, type Sheet, type Style, type Workbook } from "javascript-excel";
+import { fromDataset, fromDatasets, isExcelError, toUint8Array, type CellInput, type Dataset, type DatasetBlock, type DatasetOptions, type ExcelWarning, type Progress, type Sheet, type Style, type Workbook } from "javascript-excel";
 import { parseCsv, readCsv, toCsv, type CsvParseOptions, type CsvParseResult, type CsvWriteOptions } from "javascript-excel/csv";
 import { read, type ReadOptions } from "javascript-excel/read";
 import { createWorkerClient, type WorkerClient } from "javascript-excel/worker";
@@ -112,20 +112,32 @@ export function datasetOptions(s: WriteSettings, onWarning?: (w: ExcelWarning) =
 export interface Built {
   sheet: Sheet;
   warnings: ExcelWarning[];
+  /** 1 for a single dataset (fromDataset), n for an array of blocks (fromDatasets). */
+  blocks: number;
+}
+
+/** The blocks of an array of datasets, with `placement` set on every block after the first. */
+export function placeBlocks(datasets: Array<Dataset<unknown>>, placement: WriteSettings["placement"]): Array<DatasetBlock<unknown>> {
+  return datasets.map((d, i) => (i === 0 || placement === "below" ? d : { ...d, placement }));
 }
 
 /** Parses the dataset JSON and builds a sheet. Throws a readable Error on bad JSON. */
 export function buildSheet(json: string, s: WriteSettings): Timed<Built> {
-  let dataset: Dataset<unknown>;
+  let dataset: Dataset<unknown> | Array<Dataset<unknown>>;
   try {
-    dataset = JSON.parse(json) as Dataset<unknown>;
+    dataset = JSON.parse(json) as Dataset<unknown> | Array<Dataset<unknown>>;
   } catch (e) {
     throw new Error(`The dataset is not valid JSON: ${(e as Error).message}`, { cause: e });
   }
   const started = performance.now();
   const warnings: ExcelWarning[] = [];
-  const sheet = fromDataset(dataset, datasetOptions(s, (w) => warnings.push(w)));
-  return { result: { sheet, warnings }, ms: performance.now() - started, where: "main" };
+  const options = datasetOptions(s, (w) => warnings.push(w));
+  if (Array.isArray(dataset)) {
+    const sheet = fromDatasets(placeBlocks(dataset, s.placement), { ...options, gap: s.gap });
+    return { result: { sheet, warnings, blocks: dataset.length }, ms: performance.now() - started, where: "main" };
+  }
+  const sheet = fromDataset(dataset, options);
+  return { result: { sheet, warnings, blocks: 1 }, ms: performance.now() - started, where: "main" };
 }
 
 export function writeXlsx(workbook: Workbook, s: WriteSettings, useWorker: boolean): Promise<Timed<Uint8Array>> {
