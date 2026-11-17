@@ -191,7 +191,8 @@ export function decodeSettings(query: string, defaults: Settings): Settings {
       escapeFormulas: bool(cw.escapeFormulas, D.csvWrite.escapeFormulas),
     },
     write: {
-      sheetName: str(w.sheetName, D.write.sheetName, 31),
+      // Bounded in code points, as the library counts sheet names; the library validates the rest.
+      sheetName: typeof w.sheetName === "string" && [...w.sheetName].length <= 31 ? w.sheetName : D.write.sheetName,
       freezeHeader: bool(w.freezeHeader, D.write.freezeHeader),
       autoFilter: bool(w.autoFilter, D.write.autoFilter),
       autoWidth: bool(w.autoWidth, D.write.autoWidth),
