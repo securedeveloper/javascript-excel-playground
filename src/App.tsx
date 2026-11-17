@@ -26,6 +26,9 @@ const LINKS = {
   playground: "https://github.com/securedeveloper/javascript-excel-playground",
 };
 
+/** How the footer describes the pinned prerelease, from VERSION (an alpha, a beta, a release candidate). */
+const RELEASE_KIND = /-alpha/.test(VERSION) ? "an alpha" : /-beta/.test(VERSION) ? "a beta" : /-rc/.test(VERSION) ? "a release candidate" : "a prerelease";
+
 const TAB_LABELS: Record<Tab, string> = { read: "Read", write: "Write", csv: "CSV" };
 
 const isMac = typeof navigator !== "undefined" && /Mac|iPhone|iPad/.test(navigator.platform);
@@ -240,7 +243,7 @@ export default function App() {
 
       <footer className="mx-auto max-w-[96rem] px-4 pb-8 pt-2 text-sm text-slate-700 dark:text-slate-300">
         <p>
-          javascript-excel {VERSION} is an alpha on the npm <code>next</code> tag; the API can still change before 2.0.0. Files you open are read in this tab only: no uploads, no tracking, no cookies. MIT licence.{" "}
+          javascript-excel {VERSION} is {RELEASE_KIND} on the npm <code>next</code> tag; the API can still change before 2.0.0. Files you open are read in this tab only: no uploads, no tracking, no cookies. MIT licence.{" "}
           <a className="text-blue-800 underline dark:text-blue-300" href={LINKS.playground} target="_blank" rel="noopener noreferrer">
             Playground source
           </a>
