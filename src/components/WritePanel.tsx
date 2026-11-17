@@ -6,6 +6,7 @@ import { read } from "javascript-excel/read";
 import { useEffect, useId, useMemo, useState } from "react";
 import { buildSheet, csvWriteOptions, describeError, formatBytes, formatMs, writeXlsx } from "../lib/engine";
 import { SAMPLE_DATASET_JSON } from "../lib/samples";
+import { codePointLength, MAX_SHEET_NAME, sheetNameError } from "../lib/sheet-name";
 import type { Settings, WriteSettings } from "../lib/state";
 import { Button, Card, Fieldset, NumberField, Select, Status, TextField, Toggle } from "./ui";
 import { WorkbookView } from "./WorkbookView";
@@ -100,7 +101,7 @@ export function WritePanel({ settings, setWrite, setDataset, onRun, runSignal }:
           </p>
         </Card>
         <Card title="Options">
-          <TextField label="Sheet name" value={write.sheetName} maxLength={31} onChange={(v) => setWrite({ sheetName: v })} />
+          <TextField label="Sheet name" value={write.sheetName} onChange={(v) => setWrite({ sheetName: v })} hint={`${codePointLength(write.sheetName)} of ${MAX_SHEET_NAME} characters`} error={sheetNameError(write.sheetName)} />
           <Toggle label="Freeze header rows" checked={write.freezeHeader} onChange={(v) => setWrite({ freezeHeader: v })} />
           <Toggle label="Autofilter" checked={write.autoFilter} onChange={(v) => setWrite({ autoFilter: v })} />
           <Toggle label="Auto column width" checked={write.autoWidth} onChange={(v) => setWrite({ autoWidth: v })} />

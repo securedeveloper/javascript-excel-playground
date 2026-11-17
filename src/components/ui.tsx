@@ -71,14 +71,20 @@ export function NumberField({ label, value, onChange, min = 0, max, hint }: { la
   );
 }
 
-export function TextField({ label, value, onChange, maxLength }: { label: string; value: string; onChange: (v: string) => void; maxLength?: number }) {
+export function TextField({ label, value, onChange, hint, error }: { label: string; value: string; onChange: (v: string) => void; hint?: string; error?: string | null }) {
   const id = useId();
+  const noteId = `${id}-note`;
   return (
     <div className="flex flex-col gap-1 py-1">
       <label htmlFor={id} className="text-sm text-slate-800 dark:text-slate-200">
         {label}
       </label>
-      <input id={id} type="text" value={value} maxLength={maxLength} onChange={(e) => onChange(e.target.value)} className="field" />
+      <input id={id} type="text" value={value} onChange={(e) => onChange(e.target.value)} aria-invalid={error ? true : undefined} aria-describedby={hint || error ? noteId : undefined} className={`field ${error ? "border-red-600 dark:border-red-500" : ""}`} />
+      {(hint || error) && (
+        <p id={noteId} className={`text-xs ${error ? "text-red-700 dark:text-red-300" : "text-slate-600 dark:text-slate-400"}`}>
+          {error ?? hint}
+        </p>
+      )}
     </div>
   );
 }
