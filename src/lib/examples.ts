@@ -1,5 +1,5 @@
 // One-click scenarios: each one sets the tab and settings, and says what to look at.
-import { CSV_SAMPLES, SAMPLE_DATASET, SAMPLE_DATASET_JSON } from "./samples";
+import { CSV_SAMPLES, SAMPLE_BLOCKS_JSON, SAMPLE_DATASET, SAMPLE_DATASET_JSON } from "./samples";
 import type { Settings } from "./state";
 
 export interface Example {
@@ -41,6 +41,12 @@ export const EXAMPLES: readonly Example[] = [
     title: "Dataset with header groups and totals",
     description: "Nested columns become merged header rows; total: 'sum' adds SUM formulas.",
     apply: (s) => ({ ...s, tab: "write", dataset: SAMPLE_DATASET_JSON, write: { ...s.write, totals: true, freezeHeader: true, autoFilter: true } }),
+  },
+  {
+    id: "write-side-by-side",
+    title: "Two blocks side by side",
+    description: "An array of datasets goes through fromDatasets; placement: 'right' puts the summary next to the table.",
+    apply: (s) => ({ ...s, tab: "write", dataset: SAMPLE_BLOCKS_JSON, write: { ...s.write, placement: "right", gap: 1, autoFilter: false } }),
   },
   {
     id: "write-banded",

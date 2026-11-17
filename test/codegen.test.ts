@@ -6,6 +6,7 @@ import * as render from "javascript-excel/render";
 import ts from "typescript";
 import { describe, expect, it } from "vitest";
 import { csvSnippet, installCommand, readSnippet, snippetFor, writeSnippet, type Snippet } from "../src/lib/codegen";
+import { buildSheet } from "../src/lib/engine";
 import { EXAMPLES } from "../src/lib/examples";
 import { CSV_SAMPLES, SAMPLE_DATASET, SAMPLE_DATASET_JSON, sampleXlsx } from "../src/lib/samples";
 import { defaultSettings, type Settings } from "../src/lib/state";
@@ -50,7 +51,7 @@ describe("code generator", () => {
   });
 
   it("pins the exact version in every install command", () => {
-    expect(installCommand("npm", "2.0.0-alpha.6")).toBe("npm install javascript-excel@2.0.0-alpha.6");
+    expect(installCommand("npm", "2.0.0-alpha.7")).toBe("npm install javascript-excel@2.0.0-alpha.7");
     expect(installCommand("pnpm", "1.2.3")).toBe("pnpm add javascript-excel@1.2.3");
     expect(installCommand("yarn", "1.2.3")).toBe("yarn add javascript-excel@1.2.3");
     expect(installCommand("bun", "1.2.3")).toBe("bun add javascript-excel@1.2.3");
@@ -84,6 +85,28 @@ describe("code generator", () => {
     const bytes = await sampleXlsx();
     const wb = (await openWorkbook!(new Blob([bytes as BlobPart]))) as core.Workbook;
     expect(wb.sheets.map((x) => x.name)).toEqual(["Sales", "Notes", "Hidden"]);
+  });
+
+  it("generates fromDatasets with placement for an array of datasets", async () => {
+    const { SAMPLE_BLOCKS, SAMPLE_BLOCKS_JSON } = await import("../src/lib/samples");
+    const s: Settings = { ...BASE, tab: "write", dataset: SAMPLE_BLOCKS_JSON, write: { ...BASE.write, placement: "right", gap: 2 } };
+    const snippet = writeSnippet(s);
+    expectValid(snippet);
+    const code = snippet.files.at(-1)!.code;
+    expect(code).toContain("fromDatasets(blocks");
+    expect(code).toContain("placement: 'right'");
+    expect(code).toContain("gap: 2,");
+    expect(writeSnippet({ ...s, write: { ...s.write, placement: "below", gap: 1 } }).files.at(-1)!.code).not.toMatch(/placement:|gap:/);
+    // The generated function builds the same sheet as the playground.
+    const calls: unknown[] = [];
+    const js = ts.transpileModule(code, { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 } }).outputText;
+    const exports: Record<string, (...a: unknown[]) => Promise<unknown>> = {};
+    const written: core.Workbook[] = [];
+    const fake = { ...core, toBlob: async (wb: core.Workbook) => (written.push(wb), new Blob([])) };
+    new Function("require", "exports", js)((id: string) => ({ "javascript-excel": fake, "javascript-excel/csv": csv, "javascript-excel/dom": { download: (d: unknown) => calls.push(d) } })[id], exports);
+    await exports.exportDatasets!(SAMPLE_BLOCKS);
+    expect(calls).toHaveLength(2);
+    expect(written[0]!.sheets[0]).toEqual(buildSheet(SAMPLE_BLOCKS_JSON, s.write).result.sheet);
   });
 
   it("generates a write snippet whose options build the same sheet", () => {

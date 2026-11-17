@@ -134,12 +134,16 @@ export function writeSnippet(s: Settings): Snippet {
   if (w.totals) opts.push("  totals: { label: 'Total', style: { font: { bold: true } } },");
   if (w.banded) opts.push("  rowStyle: (_row, i) => (i % 2 ? stripe : undefined),");
   const writeOpts = w.compression === "deflate" ? "" : ", { compression: 'store' }";
+  const blocks = isBlockArray(s.dataset);
+  if (blocks && w.gap !== 1) opts.push(`  gap: ${w.gap},`);
+  const fn = blocks ? "fromDatasets" : "fromDataset";
+  const type = blocks ? "DatasetBlock" : "Dataset";
   const imports = s.worker
-    ? `import { fromDataset, type Dataset } from 'javascript-excel';
+    ? `import { ${fn}, type ${type} } from 'javascript-excel';
 import { toCsvBlob } from 'javascript-excel/csv';
 import { download } from 'javascript-excel/dom';
 ${WORKER_CLIENT}`
-    : `import { fromDataset, toBlob, type Dataset } from 'javascript-excel';
+    : `import { ${fn}, toBlob, type ${type} } from 'javascript-excel';
 import { toCsvBlob } from 'javascript-excel/csv';
 import { download } from 'javascript-excel/dom';`;
   const xlsx = s.worker
@@ -149,8 +153,15 @@ import { download } from 'javascript-excel/dom';`;
   const csvOpts = literal(csvWriteOptions(s.csvWrite) as Record<string, unknown>, { ...DEFAULT_CSV_WRITE } as Record<string, unknown>);
   const body = `${imports}
 
-${w.banded ? "const stripe = { fill: 'F2F2F2' };\n\n" : ""}export async function exportDataset(dataset: Dataset<unknown>) {
-  const sheet = fromDataset(dataset, {
+${w.banded ? "const stripe = { fill: 'F2F2F2' };\n\n" : ""}${
+    blocks
+      ? `// Blocks after the first go ${w.placement === "right" ? "to the right of the previous one (side by side)" : "below the previous one (the default)"}.
+export async function exportDatasets(datasets: DatasetBlock<unknown>[]) {
+  const blocks = ${w.placement === "right" ? "datasets.map((d, i) => (i === 0 ? d : { ...d, placement: 'right' as const }))" : "datasets"};
+  const sheet = fromDatasets(blocks, {`
+      : `export async function exportDataset(dataset: Dataset<unknown>) {
+  const sheet = fromDataset(dataset, {`
+  }
 ${opts.join("\n")}
   });
 ${xlsx}
@@ -158,6 +169,15 @@ ${xlsx}
 }
 `;
   return { files: [...(s.worker ? [{ name: "excel.worker.ts", code: WORKER_FILE }] : []), { name: "export-dataset.ts", code: body }] };
+}
+
+/** True when the Write tab's JSON is an array of datasets (built with fromDatasets). */
+export function isBlockArray(json: string): boolean {
+  try {
+    return Array.isArray(JSON.parse(json));
+  } catch {
+    return false;
+  }
 }
 
 /** Code for the CSV tab: parse text, then write it back with the chosen options. */

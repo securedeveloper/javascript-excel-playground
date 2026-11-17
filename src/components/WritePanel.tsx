@@ -7,7 +7,7 @@ import { useEffect, useId, useMemo, useState } from "react";
 import { buildSheet, csvWriteOptions, describeError, formatBytes, formatMs, writeXlsx } from "../lib/engine";
 import { SAMPLE_DATASET_JSON } from "../lib/samples";
 import type { Settings, WriteSettings } from "../lib/state";
-import { Button, Card, Fieldset, Select, Status, TextField, Toggle } from "./ui";
+import { Button, Card, Fieldset, NumberField, Select, Status, TextField, Toggle } from "./ui";
 import { WorkbookView } from "./WorkbookView";
 import type { RunRecord } from "../App";
 
@@ -37,7 +37,7 @@ export function WritePanel({ settings, setWrite, setDataset, onRun, runSignal }:
   }, [dataset, write, runSignal]);
 
   useEffect(() => {
-    if (built.ok) onRun({ source: "dataset", action: "fromDataset", ms: built.ms, where: "main", summary: `${built.result.sheet.rows.length} rows`, ok: true });
+    if (built.ok) onRun({ source: "dataset", action: built.result.blocks > 1 ? "fromDatasets" : "fromDataset", ms: built.ms, where: "main", summary: `${built.result.sheet.rows.length} rows`, ok: true });
     else onRun({ source: "dataset", action: "fromDataset", ms: 0, where: "main", summary: built.error, ok: false });
   }, [built, onRun]);
 
@@ -96,10 +96,10 @@ export function WritePanel({ settings, setWrite, setDataset, onRun, runSignal }:
           </label>
           <textarea id={areaId} value={dataset} onChange={(e) => setDataset(e.target.value)} spellCheck={false} rows={16} className="field code-input w-full" aria-describedby={`${areaId}-help`} />
           <p id={`${areaId}-help`} className="mt-2 text-xs text-slate-600 dark:text-slate-400">
-            <code>{"{ columns, data }"}</code>. Columns take key, path, title, type, numFmt, width, total and children (header groups).
+            <code>{"{ columns, data }"}</code>, or an array of them for several blocks on one sheet. Columns take key, path, title, type, numFmt, width, total and children (header groups).
           </p>
         </Card>
-        <Card title="Options (fromDataset)">
+        <Card title="Options">
           <TextField label="Sheet name" value={write.sheetName} maxLength={31} onChange={(v) => setWrite({ sheetName: v })} />
           <Toggle label="Freeze header rows" checked={write.freezeHeader} onChange={(v) => setWrite({ freezeHeader: v })} />
           <Toggle label="Autofilter" checked={write.autoFilter} onChange={(v) => setWrite({ autoFilter: v })} />
@@ -117,6 +117,21 @@ export function WritePanel({ settings, setWrite, setDataset, onRun, runSignal }:
             ]}
             onChange={(v) => setWrite({ headerFill: v })}
           />
+          <Fieldset legend="Blocks (fromDatasets)">
+            <Select
+              label="Blocks after the first"
+              value={write.placement}
+              options={[
+                ["below", "below (default)"],
+                ["right", "right: side by side"],
+              ]}
+              onChange={(v) => setWrite({ placement: v })}
+            />
+            <NumberField label="Gap" hint="empty rows or columns between blocks" value={write.gap} min={0} max={20} onChange={(v) => setWrite({ gap: v })} />
+            <p className="mt-1 text-xs text-slate-600 dark:text-slate-400">
+              {built.ok && built.result.blocks > 1 ? `${built.result.blocks} blocks, built with fromDatasets.` : "Applies when the JSON is an array of datasets; a single dataset uses fromDataset."}
+            </p>
+          </Fieldset>
           <Fieldset legend="Writer (toUint8Array)">
             <Select label="Compression" value={write.compression} options={[["deflate", "deflate (smaller)"], ["store", "store (faster)"]]} onChange={(v) => setWrite({ compression: v })} />
           </Fieldset>
@@ -140,7 +155,7 @@ export function WritePanel({ settings, setWrite, setDataset, onRun, runSignal }:
       >
         <div className="space-y-3">
           {!built.ok && <Status kind="error">{built.error}</Status>}
-          {built.ok && !status && <Status kind="info">Built a sheet of {built.result.sheet.rows.length} rows in {formatMs(built.ms)}. The preview is the render model of the sheet before it is written.</Status>}
+          {built.ok && !status && <Status kind="info">Built a sheet of {built.result.sheet.rows.length} rows{built.result.blocks > 1 ? ` from ${built.result.blocks} blocks` : ""} in {formatMs(built.ms)}. The preview is the render model of the sheet before it is written.</Status>}
           {status && <Status kind={status.kind}>{status.text}</Status>}
           {roundTrip ? (
             <>
