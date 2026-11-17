@@ -2,7 +2,7 @@
 
 An interactive playground for [javascript-excel](https://www.npmjs.com/package/javascript-excel), the zero-dependency TypeScript engine that reads and writes `.xlsx` and `.csv`. It is a single-page app with no backend: files you open are read in your browser tab and never leave your machine.
 
-It installs the **published** package from npm at an exact version (currently the `next` prerelease, `2.0.0-beta.0`), so what you see is what `npm install` gives you.
+It installs the **published** package from npm at an exact version (currently the `next` prerelease, `2.0.0-beta.1`), so what you see is what `npm install` gives you.
 
 ## What it shows
 
