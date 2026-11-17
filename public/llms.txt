@@ -1,0 +1,7 @@
+# javascript-excel playground
+
+> An in-browser playground for the javascript-excel npm package: read .xlsx and .csv files into a workbook model, build workbooks from JSON datasets, tune CSV options, and run it all in a Web Worker. No backend; files never leave the browser.
+
+- [javascript-excel on npm](https://www.npmjs.com/package/javascript-excel): the package this page runs
+- [API documentation](https://github.com/securedeveloper/javascript-excel/blob/main/docs/api.md): entry points, data model, read, write, CSV, worker, format and render APIs
+- [Playground source](https://github.com/securedeveloper/javascript-excel-playground)
