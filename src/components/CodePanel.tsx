@@ -51,7 +51,15 @@ export function CodePanel({ snippet, version }: { snippet: Snippet; version: str
             <CopyButton text={install} label="Copy" />
           </div>
           <p className="mt-1 text-xs text-slate-600 dark:text-slate-400">
-            {version} is a prerelease on the npm <code>next</code> tag; pin the exact version.
+            {version.includes("-") ? (
+              <>
+                {version} is a prerelease on the npm <code>next</code> tag; pin the exact version.
+              </>
+            ) : (
+              <>
+                {version} is on the npm <code>latest</code> tag.
+              </>
+            )}
           </p>
         </div>
         {snippet.files.map((f) => (

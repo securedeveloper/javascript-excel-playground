@@ -26,8 +26,8 @@ const LINKS = {
   playground: "https://github.com/securedeveloper/javascript-excel-playground",
 };
 
-/** How the footer describes the pinned prerelease, from VERSION (an alpha, a beta, a release candidate). */
-const RELEASE_KIND = /-alpha/.test(VERSION) ? "an alpha" : /-beta/.test(VERSION) ? "a beta" : /-rc/.test(VERSION) ? "a release candidate" : "a prerelease";
+/** How the footer describes the pinned version, from VERSION (an alpha, a beta, a release candidate, or a stable release). */
+const RELEASE_KIND = /-alpha/.test(VERSION) ? "an alpha" : /-beta/.test(VERSION) ? "a beta" : /-rc/.test(VERSION) ? "a release candidate" : /-/.test(VERSION) ? "a prerelease" : null;
 
 const TAB_LABELS: Record<Tab, string> = { read: "Read", write: "Write", csv: "CSV" };
 
@@ -243,7 +243,14 @@ export default function App() {
 
       <footer className="mx-auto max-w-[96rem] px-4 pb-8 pt-2 text-sm text-slate-700 dark:text-slate-300">
         <p>
-          javascript-excel {VERSION} is {RELEASE_KIND} on the npm <code>next</code> tag; the API can still change before 2.0.0. Files you open are read in this tab only: no uploads, no tracking, no cookies. MIT licence.{" "}
+          {RELEASE_KIND ? (
+            <>
+              javascript-excel {VERSION} is {RELEASE_KIND} on the npm <code>next</code> tag; the API can still change.{" "}
+            </>
+          ) : (
+            <>javascript-excel {VERSION} is the current release on the npm <code>latest</code> tag. </>
+          )}
+          Files you open are read in this tab only: no uploads, no tracking, no cookies. MIT licence.{" "}
           <a className="text-blue-800 underline dark:text-blue-300" href={LINKS.playground} target="_blank" rel="noopener noreferrer">
             Playground source
           </a>
